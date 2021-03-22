@@ -35,7 +35,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const updateCart = (cartArray: Product[]) => {
     setCart(cartArray);
     localStorage.setItem("@RocketShoes:cart", JSON.stringify(cartArray));
-    console.log(cart);
   };
 
   const addProduct = async (productId: number) => {
@@ -43,7 +42,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
       const existProduct = cart.some((product) => product.id === productId);
 
       if (existProduct) {
-        const cartAddAmount = cart.map((product) => {
+        const newCart = cart.map((product) => {
           if (product.id === productId) {
             product.amount += 1;
             return product;
@@ -52,7 +51,7 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
           return product;
         });
 
-        updateCart(cartAddAmount);
+        updateCart(newCart);
       } else {
         const productResponse = await api.get(`products/${productId}`);
 
@@ -62,15 +61,16 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         }
       }
     } catch {
-      // TODO
+      toast.error("Erro na adição do produto");
     }
   };
 
   const removeProduct = (productId: number) => {
     try {
-      // TODO
+      const newCart = cart.filter((product) => product.id !== productId);
+      updateCart(newCart);
     } catch {
-      // TODO
+      toast.error("Erro na remoção do produto");
     }
   };
 
@@ -79,9 +79,24 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      // TODO
+      const stock = await api.get(`stock/${productId}`);
+
+      if (stock.status !== 200 || amount > stock.data.amount) {
+        toast.error("Quantidade solicitada fora de estoque");
+        return;
+      }
+
+      const newCart = cart.map((product) => {
+        if (product.id === productId) {
+          product.amount = amount;
+        }
+
+        return product;
+      });
+
+      updateCart(newCart);
     } catch {
-      // TODO
+      toast.error("Erro na alteração de quantidade do produto");
     }
   };
 
