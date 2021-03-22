@@ -81,6 +81,12 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
 
   const removeProduct = (productId: number) => {
     try {
+      const existProduct = cart.some((product) => product.id === productId);
+
+      if (!existProduct) {
+        throw new Error();
+      }
+
       const newCart = cart.filter((product) => product.id !== productId);
       updateCart(newCart);
     } catch {
@@ -93,6 +99,10 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
+      if (amount <= 0) {
+        throw new Error();
+      }
+
       const existInStock = await isStock(productId, amount);
       if (!existInStock) return;
 
