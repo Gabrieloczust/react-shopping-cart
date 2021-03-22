@@ -37,28 +37,42 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     localStorage.setItem("@RocketShoes:cart", JSON.stringify(cartArray));
   };
 
+  const isStock = async (productId: number, amount: number) => {
+    const {
+      status,
+      data: stock,
+    }: { status: number; data: Stock } = await api.get(`stock/${productId}`);
+
+    if (status !== 200 || amount > stock.amount) {
+      toast.error("Quantidade solicitada fora de estoque");
+      return false;
+    }
+
+    return true;
+  };
+
   const addProduct = async (productId: number) => {
     try {
-      const existProduct = cart.some((product) => product.id === productId);
+      const productInCart = cart.find((product) => product.id === productId);
 
-      if (existProduct) {
-        const newCart = cart.map((product) => {
-          if (product.id === productId) {
-            product.amount += 1;
-            return product;
-          }
+      if (productInCart) {
+        updateProductAmount({ productId, amount: productInCart.amount + 1 });
+        return;
+      }
 
-          return product;
-        });
+      const {
+        status,
+        data: product,
+      }: { status: number; data: Product } = await api.get(
+        `products/${productId}`
+      );
 
-        updateCart(newCart);
-      } else {
-        const productResponse = await api.get(`products/${productId}`);
+      if (status === 200) {
+        const existInStock = await isStock(productId, 1);
+        if (!existInStock) return;
 
-        if (productResponse.status === 200) {
-          productResponse.data.amount = 1;
-          updateCart([...cart, productResponse.data]);
-        }
+        product.amount = 1;
+        updateCart([...cart, product]);
       }
     } catch {
       toast.error("Erro na adição do produto");
@@ -79,12 +93,8 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     amount,
   }: UpdateProductAmount) => {
     try {
-      const stock = await api.get(`stock/${productId}`);
-
-      if (stock.status !== 200 || amount > stock.data.amount) {
-        toast.error("Quantidade solicitada fora de estoque");
-        return;
-      }
+      const existInStock = await isStock(productId, amount);
+      if (!existInStock) return;
 
       const newCart = cart.map((product) => {
         if (product.id === productId) {
