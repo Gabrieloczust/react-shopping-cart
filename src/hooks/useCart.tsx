@@ -17,6 +17,7 @@ interface CartContextData {
   addProduct: (productId: number) => Promise<void>;
   removeProduct: (productId: number) => void;
   updateProductAmount: ({ productId, amount }: UpdateProductAmount) => void;
+  checkOut: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextData>({} as CartContextData);
@@ -120,9 +121,22 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
     }
   };
 
+  const checkOut = async () => {
+    try {
+      if (cart.length === 0) {
+        throw new Error();
+      }
+
+      updateCart([]);
+      toast.success("Pedido finalizado");
+    } catch {
+      toast.error("Erro ao finalizar pedido");
+    }
+  };
+
   return (
     <CartContext.Provider
-      value={{ cart, addProduct, removeProduct, updateProductAmount }}
+      value={{ cart, addProduct, removeProduct, updateProductAmount, checkOut }}
     >
       {children}
     </CartContext.Provider>
