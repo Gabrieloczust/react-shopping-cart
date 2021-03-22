@@ -443,23 +443,4 @@ describe("Check Out", () => {
     expect(result.current.cart).toEqual([]);
     expect(mockedToastError).toHaveBeenCalledWith("Erro ao finalizar pedido");
   });
-
-  it("should be able to finalize the order", () => {
-    beforeInitial();
-
-    const { result } = renderHook(useCart, {
-      wrapper: CartProvider,
-    });
-
-    act(() => {
-      result.current.checkOut();
-    });
-
-    expect(result.current.cart).toEqual([]);
-    expect(mockedSetItemLocalStorage).toHaveBeenCalledWith(
-      "@RocketShoes:cart",
-      JSON.stringify(result.current.cart)
-    );
-    expect(mockedToastSucess).toHaveBeenCalledWith("Pedido finalizado");
-  });
 });
