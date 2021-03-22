@@ -127,19 +127,6 @@ export function CartProvider({ children }: CartProviderProps): JSX.Element {
         throw new Error();
       }
 
-      await cart.map(async (product) => {
-        const { status, data: productStock } = await api.get(
-          `stock/${product.id}`
-        );
-
-        if (status === 200) {
-          await api.put("stock", {
-            id: product.id,
-            amount: productStock.amount - product.amount,
-          });
-        }
-      });
-
       updateCart([]);
       toast.success("Pedido finalizado");
     } catch {
